@@ -1,0 +1,163 @@
+
+#container{
+    margin : auto;
+    width : 80%
+}
+.leftfloat{
+    float : left;
+}
+
+.padding20{
+    padding : 20px
+}
+#mainimg{
+}
+.flexcont{
+    display: flex;
+}
+#otherimgcont{
+}
+#otherimgcont div{
+    width : 15%;
+    
+}
+.resimg{
+    width : 100px;
+    height : 100px;
+    object-fit: scale-down;
+}
+.listing-img{
+    width: 200px;
+    height : 130px;
+    object-fit: scale-down;
+}
+.upload-preview-img{
+    width: 220px;
+    height : 130px;
+    object-fit: scale-down;
+    max-width : 100%;
+}
+.aligned{
+    align-items: center;
+    justify-content: center;
+}
+.page-wrapper {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  justify-content: space-between
+}
+.preview-item{
+    flex: 33.33333%;
+    max-width: 33.33333%;
+}
+.modalImagesContainer{
+    display :flex;
+    flex-wrap : wrap;
+}
+.modalImgCont{
+    margin : 10px;
+}
+.modalimg{
+    width: 217px;
+    height : 163px;
+    object-fit: scale-down;
+}
+.indvimgXXX{
+    float : left;
+    margin : 20px;
+}
+.imgmin{
+    max-height : 90%;
+    max-width : 90%;
+    height = auto;
+    width = auto;
+    
+}
+#rightcol{
+    width : 600px;
+}
+
+#zoomed{
+    max-width : 50%;
+    max-height : 50%;
+    width : auto;
+    height : auto;
+}
+.thumbnailcont{
+    overflow:hidden;
+    max-width : 50%;
+    max-height : 50%;
+    background-color: white;
+}
+.greyedout{
+    opacity: 0.4;
+    filter: alpha(opacity=40); 
+
+}
+.thumbimg{
+    text-align: center;
+    width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+.carousel-item{
+    height:300px;
+}
+.carousel-control-next,
+.carousel-control-prev {
+    filter: invert(100%);
+}
+#carrousel{
+    width: 600px;
+    height : 300px;
+}
+#allImgPreviewCont {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: space-between;
+}
+.khaki{
+    background-color: khaki;
+}
+.lemonchiffon{
+    background-color: LemonChiffon;
+}
+.lightyellow{
+    background-color: LightYellow;
+}
+.palegreen{
+    background-color: PaleGreen;
+}
+.lightblue{
+    background-color : #e6ffff;
+}
+.aliceblue{
+    background-color : AliceBlue;
+}
+.azure{
+    background-color: Azure;
+}
+.medpurple{
+    background-color : #eee6ff;
+}
+.azuredark{
+    background-color : #f0ffff;
+}
+.allImgPreviewCont a {
+  flex-grow: 1;
+  flex-basis: 125px;
+  max-width: 300px;
+  margin: 5px;
+}
+
+.allImgPreviewCont img {
+  height: 100%;
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .modal-xl {
+    width: 90%;
+   max-width:1200px;
+  }

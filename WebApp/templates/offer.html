@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" >
+<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+<style>
+</style>
+</head>
+
+
+   <body>
+    {% include "header.html" %}
+   <div class="page-wrapper">
+   <div id="container" class="row">
+       <div id="leftcol" class="col azure padding20 rounded shadow-lg">
+           <h1>Detail inzerátu</h1>
+           <strong><label>Lokace</label><br></strong>
+           <p> {{ result.location}} </p>
+           <strong><label>Plocha</label><br></strong>
+           <p> {{ result.area}} m<sup>2</sup></p>
+           <strong><label>Cena</label><br></strong>
+           <p><span id="price"> {{ result.price}} </span><span>Kč</span></p>
+           <strong><label>Kontakt</label></strong>
+           <p> {{ result.email}} </p>
+           <strong><label>Popis</label><br></strong>
+           <p> {{ result.description}} </p>
+       </div>
+    
+       <div id="rightcol" class="col padding20 azuredark rounded shadow-lg">
+           <div id="mainimg" class="padding20">
+                <div id="carrousel">
+                    <div id="carouselImages" class="carousel slide" data-ride="false" data-interval="false">
+                       <div class="carousel-inner ">
+                        {%  for image in result.imageList  %}
+                             {% if loop.index0  == 0 %} 
+                             <div class="carousel-item active" data-interval="false" data-imgindex="{{loop.index0}}">
+                               <img src="/files/{{ image.imagePath }}" class=" thumbimg" alt="{{ image.imagePath }}">
+                             </div> 
+                             {%  else %}
+                         <div class="carousel-item" data-imgindex="{{loop.index0}}">
+                           <img src="/files/{{ image.imagePath }}" class="d-block thumbimg" alt="{{ image.imagePath }}">
+                         </div>
+                         {%  endif %}
+                         {% endfor %}
+                       </div>
+                       <a class="carousel-control-prev" href="#carouselImages" role="button" data-slide="prev">
+                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                         <span class="sr-only">Previous</span>
+                       </a>
+                       <a class="carousel-control-next" href="#carouselImages" role="button" data-slide="next">
+                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                         <span class="sr-only">Next</span>
+                       </a>
+                     </div>
+                </div> <!-- carous end -->
+                <div id="carouselPlaceholder"></div>
+                <div>
+                      <span>Obrázek: </span><span id="currentSlideCounter">1</span> / <span id="totalSlidesCounter"></span>
+                </div>               
+           </div>
+            <div class="row filters mb-3 d-none aligned">
+                <h4>Filtry:</h4>
+            </div>
+           <div id="otherimgcont" class="text-center row p-2 aligned">
+           <script>imagesArr = []; imgObj = {}; </script>
+            {%  for image in result.imageList  %}
+            <script>
+            imgObj = { "src" : "{{ image.imagePath}}",
+                            "imageClass" : "{{image.cla}}"
+            };
+            imagesArr.push(imgObj);
+            </script>
+            {% if loop.index0 < 5 %}
+            <script>var MAXTHUMBNAILS = 5</script>
+                {% if loop.index != loop.length %}  
+                    <div class="mr-1 thumbnailcont gridi{{ loop.index0 }}" data-currentid="{{loop.index0}}" data-gridid="{{ loop.index0 }}">
+                        <img src="/files/{{ image.imagePath }}" class="resimg" alt="{{ image.imagePath }}">
+                    </div>
+                {%  else %}
+                    <div class="thumbnailcont gridi{{ loop.index0 }}" data-currentid="{{loop.index0}}" data-gridid="{{ loop.index0 }}">
+                        <img src="/files/{{ image.imagePath }}" class="resimg" alt="{{ image.imagePath }}">
+                    </div>
+                {%  endif %}
+            {% endif %}
+            {% endfor %}
+
+           </div>
+           <div class="text-center">
+               <div class="mt-5">
+               <p id="remainingText">A dalších <span id="remainingNumber"></span> fotografií</p>
+               <button type="button" class="btn btn-info mw-25 " data-toggle="modal" data-target="#allImagesModal">
+                      Zobrazit všechny fotografie
+               </button>
+               </div>
+           </div>
+
+                           
+       </div><!-- right col end-->
+
+       
+   <div id="tempholder" class="d-none"></div>
+   <div id="zoomed"></div>
+
+    <div class="modal fade" id="allImagesModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalLabel">Seznam obrázků dle zvolených kriterií</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="allImgPreviewCon modalImagesContainer container-fluid">
+
+            {%  for image in result.imageList  %}
+            {% if loop.index0%3 == 0 %} {%  endif %}
+                <div class="gridi{{ loop.index0 }} modalImgCont" data-imgindex="{{loop.index0}}" data-currcarindex="{{loop.index0}}">
+                     <img src="/files/{{ image.imagePath }}" class="{{ image.cla }} filterOff modalimg border" alt="{{ image.imagePath }}"/> 
+                </div>
+            {%  if loop.index%3 == 0 or loop.index == loop.length %}<!-- row closing -->{%  endif %}
+            {% endfor %}
+                
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary close" data-dismiss="modal"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    </div><!--outer row-->
+    
+    {% include 'footer.html' %} 
+    </div>
+<script>
+$(document).ready(function() {
+
+//format cisla ceny
+$("#price").text(Number($("#price").text()).toLocaleString());
+
+//pocitadlo orientace v carouselu - aktualni snimek lomeno celkovy pocet snimku
+function carouselCountersUpdate(){
+    $("#totalSlidesCounter").text($(".carousel-inner").children().length);
+    $("#carouselImages").bind("slid.bs.carousel", function(){
+        $("#currentSlideCounter").text($(".active").index() + 1);
+        $(".carousel-item").length
+    });
+    let remainingNumber = $(".carousel-inner").children().length - MAXTHUMBNAILS;
+    if(remainingNumber <= 0){
+        $("#remainingText").hide();
+    }else{
+        $("#remainingText").show();
+        $("#remainingNumber").text(remainingNumber);
+    }
+    
+}
+carouselCountersUpdate();
+
+//nastavit carousel na spravny obrazek, pri initializaci stranky se uklada pro vsechny img tagy gridi, pres regex je ziskane gridi cislo
+// to je nastaveno pro carousel, kdyz jsou greyedout nedelame nic
+$(".modalimg").on("click", function(e){
+    target = $(e.target).parent();
+    if(!target.hasClass("greyedout")){
+        gridi = Number(target.attr("data-currcarindex"));
+        $("#allImagesModal").modal("hide");
+        $("#carouselImages").carousel(gridi);
+    }
+});
+//stejna metoda pro thumbnail imgObj, bez modal schovani, ulozit currentid do data atributu pri inicializaci, gridid se vzdycky bude rovnat imgid pokud neni aplikovan filtr, pri filtru je razene postupne
+$(".resimg").on("click", function(e){
+    currentid = Number($(e.target).parent().attr("data-gridid"));
+    $("#carouselImages").carousel(currentid);
+});
+
+
+
+categories = ["bathroom", "bedroom", "kitchen", "living_room", "plan", "None"];
+categoryMapping = { "bathroom" : "Koupelna",
+    "bedroom" : "Ložnice",
+    "kitchen" : "Kuchyň",
+    "living_room" : "Obývák",
+    "plan" : "Půdorys"
+}
+
+presentCategories = [];
+$(".modalimg").each(function(i, o){
+  let category = $(this).attr("class").split(" ")[0];
+  if(!presentCategories.includes(category)){
+      presentCategories.push(category);
+  }
+  
+})
+//dynamicke pridani filtru do stranky, pokud jsou pritomne nejake filtry zobrazit filter row
+presentCategories.forEach(function(i){
+    if(categoryMapping[i]){
+        $(".filters").removeClass("d-none");
+        $(".filters").append($("<button>Filtr " + categoryMapping[i] +"</button>").attr({"class" : "filterBtn btn btn-info m-1", "data-filterfor" : i}))
+    }
+})
+function clearFilters(filterFor, btn){
+    $(".filterBtn").removeClass("toggleOn");
+    $(".filterBtn").removeClass("btn-dark");
+    $(".filterBtn").addClass("btn-info"); 
+    $(".resimg").each(function(i){
+        $(this).attr("src", "/files/" + imagesArr[i].src);
+
+    });
+    $(".thumbnailcont").each(function(e){
+        $(this).attr("data-currentid", e);
+        $(this).show();
+        
+    });
+    $(".modalImgCont").each(function(i){
+        $(this).removeClass("greyedout");
+        $(this).attr("data-currcarindex", $(this).attr("data-imgindex"));
+    });
+    /*$("#carouselImages").replaceWith(carouselOriginal[0]);
+    $(".carousel-item").each(function(i){
+
+    })*/
+    let carouselItems = [];
+    $("#tempholder").children().each(function(i, obj){
+        //kdyby byl nektery z odstavenych elementu active, tak odebrat active
+        if($(obj).hasClass("active")){
+            $(obj).removeClass("active");
+        }
+        carouselItems.push(obj)
+    });
+    $(".carousel-inner").children().each(function(i, obj){
+        carouselItems.push(obj);
+    });
+    carouselItems.sort(function(a,b){
+        return parseInt($(a).attr("data-imgindex")) - parseFloat($(b).attr("data-imgindex"));
+    });
+    carouselItems.forEach(function(item){
+        $(".carousel-inner").append($(item));
+    })
+}
+//carousel zustava otevreny i po filtru, by design ukazuje nahled vsech obrazku i tak vsechny obrazky, jen ty nereleavntni pro tridu filtru
+//jsou greyed out. Tedy kdyz na ne uzivatel klikne, carousel by je mel zobrazit. Filtr tedy hlavne aplikuje nahledy pod carouselem a grey out na obrazky
+function filterBtnClick(e){
+    let btn = $(this)
+    let filterFor = $(this).attr("data-filterfor");
+    if($("." + filterFor).length > 0){
+        if(btn.hasClass("toggleOn")){
+            //sundat filter
+            clearFilters(filterFor, btn);
+            carouselCountersUpdate(); 
+        }else {
+            //neni nutna podpora vice filtru najednou, takze i zde se nejdriv odstrani filtry, protoze muzou byt nejake aplikovane
+            clearFilters(filterFor, btn);
+            btn.addClass("toggleOn");
+            btn.removeClass("btn-light");
+            btn.addClass("btn-dark");
+            //nasetovat filter
+            let filteredImages = []
+            //imagesArr je array vytvoreny z dat passnutych ze serveru pri nacteni stranky, ma v sobe vsechny obrazky, jejich src a class
+            imagesArr.forEach(function(img, i){
+                //kdyz obrazek odpovida tride, ulozit do filteredimgs array
+                if(img.imageClass == filterFor){
+                    img.index = i;
+                    filteredImages.push(img);
+                }else{
+                    //kdyz ne tak pro modal nastavit greyout a pro carousel itemy prehodit pod temp element holder, nastavit prvni zbyvajici element u carouselu jako active pokud neni zadny active
+                    currentModal = $(".modalImgCont[data-imgindex='" + i + "']")
+                    currentModal.addClass("greyedout");
+                    if(currentModal.hasClass("active")){
+                        currentModal.removeClass("active");    
+                    }
+                    $(".carousel-item[data-imgindex='" + i + "']").appendTo($("#tempholder"));
+                    if($(".carousel-inner").children(".active").length == 0){
+                        $($(".carousel-inner").children()[0]).addClass("active"); 
+                    }
+                }
+            })
+            let usedIndex = 0;
+            //nastavit obrazky na thumbnaily, pokud nejsme na max indexu, pro modaly nastavit spravne id pro carousel
+            filteredImages.forEach(function(img, i){
+                $(".modalImgCont[data-imgindex='" + img.index + "']").attr("data-currcarindex", i);
+                if(usedIndex<MAXTHUMBNAILS){
+                    $($(".thumbnailcont")[i].children[0]).attr("src", "/files/" + img.src);
+                    $($(".thumbnailcont")[i]).attr("data-currentid" , img.index);
+                    
+                    usedIndex ++;
+                }
+            }); 
+            //kdyz se nevyuzily vsechny indexy, schovat zbyvajici thumbnailcontainery 
+            for(usedIndex; usedIndex < MAXTHUMBNAILS; usedIndex++){
+                $($(".thumbnailcont")[usedIndex]).hide();
+            }
+            carouselCountersUpdate();                
+        }
+    }
+}
+
+$(".filterBtn").on("click", filterBtnClick);
+
+
+
+console.log(presentCategories)
+});  //end document ready   
+</script>
+   </body>  
+</html>

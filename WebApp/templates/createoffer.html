@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"
+    		integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ="
+    		crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" >
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+</head>
+
+
+<body>
+{% include "header.html" %}
+<div class="page-wrapper">
+<div id="container" class="row">
+    <div id="leftcol" class="col azure p-5 shadow-lg rounded">
+       <h1>Nový inzerát</h1>
+        <form id="offerform">
+            <label for="locationInput">Lokace</label><br>
+            <input type="text" name="location" id="locationInput" required/><br>
+            <label for="areaInput">Plocha</label><br>
+            <div class="input-group">
+                <input type="text" name="area" id="areaInput" required/><br>
+                <div class="input-group-append">
+                   <div class="input-group-text">m<sup>2</sup></div>
+                </div>
+            </div>
+            <label for="priceInput">Cena</label><br>
+            <div class="input-group">
+                
+                <input type="text" name="price" id="priceInput" required/><br>
+                <div class="input-group-append">
+                   <div class="input-group-text">Kč</div>
+                </div>
+            </div>
+            <label for="emailInput">Kontaktní email</label><br>
+            <input type="text" name="email" id="emailInput" required/><br>
+            <label for="descriptionInput">Popis</label><br>
+            <textarea  name="description" class="w-50" id="descriptionInput" required></textarea><br>
+            <div id="uploadctnr">
+                <button id="previewbtn" class="btn btn-info mb-1 mt-3">Zkontrolovat inzerát před odesláním</button>
+            </div>
+            <input type="submit" id="formSubmitBtn" class="btn btn-info d-none" value="Odeslat inzerát"/>
+        </form>
+    </div>
+ 
+    <div id="rightcol" class="col p-5 shadow-lg rounded azuredark">
+        <div id="mainimg" class="padding20">
+            
+        </div>
+         <div class="recommendations mb-5">
+             <h3>Doporučení</h3>
+             <div  class = "rounded p-3  shadow lemonchiffon nopictures">
+                 <p>Na inzeráty s dobrou volbou obrázku reaguje dle naších zkušeností daleko více uživatelů</p>
+             </div>
+         </div>
+         <h3>Nahrávání fotografií</h3>
+         <div>
+             <label class="btn btn-info" for="fileupload">Nahrát fotografie
+             <input type="file" id="fileupload" class="mb-2" accept="image/*" hidden/>
+             </label><br>
+         </div>
+         <hr>
+         <div id="previewImgCont">
+             <p><strong>Nahrané fotografie</strong></p>
+             <div id="output" class="row text-center">
+             </div>
+         </div>
+    </div>
+</div><!-- container end -->    
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" aria-labelledby="loadingModal">
+   <div class="modal-dialog modal-sm" role="document">
+     <div class="modal-content">
+       <div class="modal-body text-center">
+         <div class="loader"></div>
+         <div class="loader-txt">
+           <p>Váš požadavek se zpracovává <br><br>
+           <small>Prosíme o chvíli ztrpení, než bude inzerát vyhodnocen</small></p>
+           <div class="spinner-border" role="status">
+               <span class="sr-only">Načítání</span>
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
+ </div> <!-- modal end -->
+ {% include "footer.html" %}
+ </div>   
+
+<script>
+$(document).ready(function() {
+
+imageDict = {}
+$("#fileupload").on("change", function(e){
+    //ziskat filename, odelit priponu, nahradit mezery underscorem, protoze by delaly neplechu v class name
+    let filename = e.target.files[0].name.split(".")[0];
+    filename = filename.replace(/\s+/g, '_');
+    
+    //pridat file do dict s klicem filename, pokud v nem jiz takove jmeno neni, jinak na konec jmena souboru pridat 1
+    if(!(filename in imageDict)){
+        imageDict[filename] = e.target.files[0];
+    }else{
+        filename = filename + "1";
+        imageDict[filename] = e.target.files[0];
+    }
+    
+    //imageDict[filename] = e.target.files[0];
+       
+    
+    //create img obj pro preview a nastavit url
+    let imgPreview = new Image(300, 300);
+    
+    imgPreview.src = URL.createObjectURL(e.target.files[0]);
+    $(imgPreview).attr("class", "upload-preview-img");
+    //vytvorit kontejner s buttonem co odstrani preview img z imglistu a z html
+    let imgPreviewContainer = $("<div></div>").attr({"id" : filename, "class" : "col12 d-inline-block preview-item border border-light p-2", "data-filename" : filename});
+    let rmvBtn = $("<button>Odstranit</button>").attr("class", filename + " " + " btn btn-info mb-1");
+    rmvBtn.on("click", function(e){
+        delete imageDict[$(e.target).parent().attr("data-filename")];
+        $(e.target).parent().remove()       
+    }) ;
+    
+    
+    $("#output").append(imgPreviewContainer);
+    imgPreviewContainer.append(rmvBtn);
+    imgPreviewContainer.append(imgPreview);
+})
+
+//pro nahrani inzeratu pouzit ajax upload pro nahrani vsech souboru z imglistu a potom pri successu redirect pres window location
+$("#offerform").submit(function(e){
+    e.preventDefault()
+    var form = $("#offerform")[0]
+    let formData = new FormData(form);
+      
+    for(file in imageDict){
+        formData.append("images[]", imageDict[file], imageDict[file].name);
+    }
+    $("#loadingModal").modal({
+          backdrop: "static", //remove ability to close modal with click
+          keyboard: false, //remove option to close with keyboard
+          show: true //Display loader!
+    });  
+    $.ajax({
+     url: '/postoffer/',
+     type: 'post',
+     data: formData,
+     processData: false,
+     contentType: false,
+     success : function(response){
+         console.log(response);
+         if(response.redirect){
+             $("#loadingModal").modal("hide");
+             window.location.replace("/offer/" + response.redirect);
+         }
+     },
+     error : function(response){
+         setTimeout(function() {
+              $("#loadingModal").modal("hide");
+            }, 1000);
+     }
+     });
+});
+
+$("#previewbtn").click(function(e){
+    e.preventDefault();
+    $("#formSubmitBtn").removeClass("d-none");
+    $("#previewbtn").text("Znovu zkontrolovat inzerát");
+    $("#loadingModal").modal({
+          backdrop: "static", //remove ability to close modal with click
+          keyboard: false, //remove option to close with keyboard
+          show: true //Display loader!
+        });    
+    
+    
+    var fd = new FormData();
+    for(file in imageDict){
+        fd.append("images[]",  imageDict[file], file)
+    }
+    /*for (var pair of fd.entries()) {
+        console.log(pair[0]+ ', ' + pair[1]); 
+    }*/
+    $.ajax({
+        url: '/receive/',
+        type: 'post',
+        data: fd,
+        processData: false,
+        contentType: false,
+        success: function(response){
+        
+            setTimeout(function() {
+              $("#loadingModal").modal("hide");
+            }, 1000);
+            $("#offerform")[0].reportValidity()
+            
+            if(response != 0){
+                console.log(response)
+                let pclassArr = []
+                for(pclass in response.predClasses){
+                    if (typeof(response.predClasses[pclass][0]) !== "undefined"){
+                        pclassArr.push(response.predClasses[pclass][0]);
+                    }
+                }
+                presentCategories = Array.from(new Set(pclassArr));
+                
+                //check kdyz neni zadnej obrazek v urcity tride a zaroven neni vypsana hlaska
+                if(!presentCategories.includes("kitchen") && !($(".nokitchen")[0])){
+                    let recomContainer = $("<div></div>").attr("class", "rounded p-3 shadow khaki nokitchen");
+                    let text = "Zvažte nahrání fotky kuchyně. Kuchyň je pro mnoho lidí klíčocovu v rozhodování a její dobře pořízené fotky velice zvyšují atraktivitu inzerátu.";
+                    let recom = $("<p>" + text + "</p>").attr("class", "recommendation ");
+                    recom.appendTo(recomContainer);
+                    recomContainer.appendTo($(".recommendations"))
+                }
+                if(!presentCategories.includes("bathroom") && !($(".nobathroom")[0])){
+                    let recomContainer = $("<div></div>").attr("class", "rounded p-3 shadow lemonchiffon nobathroom");
+                    let text = "Zkuste k vašemu inzerátu přidat kvalitní fotografii koupelny či záchoda. Jedná se o zásadní věci u každé nemovitosti a lidé upřednostní inzeráty s jejich názornými fotografiemi.";
+                    let recom = $("<p>"+ text + "</p>").attr("class", "recommendation ");
+                    recom.appendTo(recomContainer);
+                    recomContainer.appendTo($(".recommendations"))
+                }
+                if(!presentCategories.includes("plan") && !($(".noplan")[0])){
+                    let recomContainer = $("<div></div>").attr("class", "rounded p-3 shadow lightyellow noplan");
+                    let text = "Znázornění půdorysu umožňuje zájemců udělat si jasnou představu o nemovitosti. Jeho přidáním si ušetříte případné otázky při komunikaci a dodáte svému inzerátu lepší detail.";
+                    let recom = $("<p>"+text+"</p>").attr("class", "recommendation ");
+                    recom.appendTo(recomContainer);
+                    recomContainer.appendTo($(".recommendations"))
+                }
+                //pokud jsou vsechny kategorie, ktere se kontroluji pritomne, vypsat zelene pochvalnou zpravu
+                if(presentCategories.includes("plan") && presentCategories.includes("bathroom") && presentCategories.includes("kitchen")){
+                    let recomContainer = $("<div></div>").attr("class", "rounded p-3 shadow palegreen allpresent");
+                    let text = "Zdá se, že Váš inzerát obsahuje dobrou sestavu fotografií";
+                    let recom = $("<p>"+text+"</p>").attr("class", "recommendation ");
+                    recom.appendTo(recomContainer);
+                    recomContainer.appendTo($(".recommendations"));
+                    $(".nopictures").hide();
+                    
+                }else{
+                //kdyz se nektery obrazek z nich smaze a uz nejsou vsechny kategorie pritomny, smazat zpravu
+                    $(".allpresent").remove();
+                    $(".nopictures").show();
+                }
+                
+                //kdyz jsou pritomny kategorie, odstranit jejich hlasky (no+nazev kategorie tridy)
+                presentCategories.forEach(function(presentcat){
+                    if($(".no" + presentcat)[0]){
+                        $(".no" + presentcat).remove();
+                           
+                    }
+                })
+            }else{
+                alert('file not uploaded');
+            }
+        },
+        error: function (response) {
+            console.log(response);
+            setTimeout(function() {
+              $("#loadingModal").modal("hide");
+            }, 1500);
+            $("#offerform")[0].reportValidity();
+        }
+    });
+});
+
+
+ 
+
+});  //end document ready   
+</script>
+
+
+   </body>
+</html>
