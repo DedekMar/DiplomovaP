@@ -1,0 +1,9 @@
+*.pyc
+__pycache__/
+files/
+*.log
+testing.py
+db.db
+predictor.py
+flaskr
+*.hdf5
